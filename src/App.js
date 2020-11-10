@@ -71,7 +71,7 @@ function App() {
         path="/"
         render={() => <Products addToCart={addToCart} products={products} />}
       />
-      <Route path="/cart" render={() => <Cart cartItems={cartProducts} />} />
+      <Route path="/cart" render={() => <Cart cartProducts={cartProducts} />} />
     </Router>
   );
 }

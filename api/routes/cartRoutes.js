@@ -10,14 +10,6 @@ router.post("/", (req, res) => {
   const uniqueID = uuid.v4();
   const { productId } = req.body;
 
-  // const productsToAdd = products
-  //   // returns an array that has only item which id === productId --> [{ id: 1, title: "Beautiful Shoes!", price: 12}]
-  //   .filter((product) => productId === product.id)
-  //   // map over 1 item, copy all properties and add new prop count
-  //   .map((item) => {
-  //     return { ...item, count: 1 };
-  //   });
-
   const findProduct = products.find((product) => productId === product.id);
   const updatedProduct = { ...findProduct, count: 1 };
 
@@ -39,47 +31,45 @@ router.post("/", (req, res) => {
 // add an item to an existing cart, how to know which product id to add
 router.patch("/:cartId", (req, res) => {
   const { cartId } = req.params;
+  const { productId } = req.body;
 
   if (!cartId) {
     res.status(400).json({ message: "please provide a cartId parameter" });
   }
 
-  //get the product id from the body
-  const newItemId = req.body.productId;
+  // get cart object
+  const cart = carts.find((cart) => cart.id === cartId);
 
-  // Find cart index from carts array:
-  const cartToEditIndex = carts.findIndex(
-    (cart) => cart.id === req.params.cartId
-  );
   // If it's not a valid cart id, do not continue:
-  if (cartToEditIndex === -1) {
+  if (!cart) {
     res.status(404).json({ message: "please provide a valid cartId" });
   }
-  // get cart object
-  const cartToEdit = carts[cartToEditIndex];
+
   let newProducts = [];
   // check if item already exists in the cart:
-  const alreadyInCart =
-    cartToEdit.products.filter((p) => p.id === newItemId).length !== 0;
-  if (alreadyInCart) {
+  const isInCart = cart.products.filter((p) => p.id === productId).length !== 0;
+
+  if (isInCart) {
     // if item already in cart, update the count
-    newProducts = cartToEdit.products.map((product) => {
-      if (product.id === newItemId) {
+    newProducts = cart.products.map((product) => {
+      if (product.id === productId) {
         return { ...product, count: product.count + 1 };
       }
       return product;
     });
   } else {
-    // if a new item, add it to the cart
-    const newItem = products.find((product) => product.id === newItemId);
-    cartToEdit.products.push({ ...newItem, count: 1 });
-    newProducts = cartToEdit.products;
+    // if item isn't in a cart yet, add it to the cart
+    const newItem = products.find((product) => product.id === productId);
+    cart.products.push({ ...newItem, count: 1 });
+    newProducts = cart.products;
   }
+
+  const findIndex = carts.findIndex((c) => c.id === cartId);
   // replace products array with new array we just created:
-  carts[cartToEditIndex].products = newProducts;
+  carts[findIndex].products = newProducts;
 
   // respond to the request
-  res.json(carts[cartToEditIndex]);
+  res.json(carts[findIndex]);
 });
 
 module.exports = router;
